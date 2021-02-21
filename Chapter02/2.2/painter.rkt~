@@ -1,0 +1,15 @@
+#lang sicp
+(#%require sicp-pict)
+(define e einstein)
+(define (flipped-pairs painter)
+  (let ((painter2
+          (beside painter
+                  (flip-vert painter))))
+    (below painter2 painter2)))
+(define (right-split painter)
+  (let ((right
+          (below painter
+                 (flip-vert painter))))
+    (beside painter right)))
+(paint (right-split e))
+(paint (flipped-pairs e))
