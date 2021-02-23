@@ -8,7 +8,7 @@
 ;;; Representing algebraic expression
 ;;;
 
-
+(define exp-order 'infix);prefix infix suffix
 (define (variable? x) (symbol? x))
 
 ; same-variable? : Two variables are the same 
@@ -20,6 +20,36 @@
 
 ;; basic function
 ;;; universe selector
+(define (binary-operator exp)
+  (cond ((eq? exp-order 'prefix) (car exp))
+        ((eq? exp-order 'infix) (cadr exp))
+        ((eq? exp-order 'suffix) (caddr exp))))
+(define (unary-operator exp)
+  (if (eq? exp-order 'suffix)
+    (cadr exp)
+    (car exp)))
+(define (first-term-of-binary exp)
+  (cond ((eq? exp-order 'prefix) (cadr exp))
+        ((eq? exp-order 'infix) (car exp))
+        ((eq? exp-order 'suffix) (car exp))))
+(define (second-term-of-binary exp)
+  (cond ((eq? exp-order 'prefix) (caddr exp))
+        ((eq? exp-order 'infix) (caddr exp))
+        ((eq? exp-order 'suffix) (cadr exp))))
+(define (content-of-unary exp) 
+  (if (eq? exp-order 'suffix)
+    (car exp)
+    (cadr exp)))
+
+;;; universe constructor
+(define (binary-constructor operator first-term second-term)
+  (cond ((eq? exp-order 'prefix) (list operator first-term second-term))
+        ((eq? exp-order 'infix) (list first-term operator second-term))
+        ((eq? exp-order 'suffix) (list first-term second-term operator))))
+(define (unary-constructor operator content)
+  (if (eq? exp-order 'suffix)
+    (list content operator)
+    (list operator content)))
 
 ;;; Is the exp equal to num
 (define (=number? exp num)
@@ -31,12 +61,12 @@
         ((=number? a2 0) a1)
         ((and (number? a1) (number? a2))
          (+ a1 a2))
-        (else (list a1 '+ a2))))
+        (else (binary-constructor '+ a1 a2))))
 (define (sum? exp)
   (and (list? exp)
-       (eq? (cadr exp) '+)))
-(define (augend sum-exp) (car sum-exp))
-(define (addend sum-exp) (caddr sum-exp))
+       (eq? (binary-operator exp) '+)))
+(define (augend sum-exp) (first-term-of-binary sum-exp))
+(define (addend sum-exp) (second-term-of-binary sum-exp))
 
 ;; representing of minus
 (define (make-minus exp1 exp2)
@@ -44,13 +74,13 @@
         ((=number? exp2 0) exp1)
         ((and (number? exp1) (number? exp2))
          (- exp1 exp2))
-        (else (list exp1 '- exp2))))
+        (else (binary-constructor '- exp1 exp2))))
 
 (define (minus? exp)
   (and (list? exp)
-       (eq? (cadr exp) '-)))
-(define (minuend sum-exp) (car sum-exp))
-(define (subtrahend sum-exp) (caddr sum-exp))
+       (eq? (binary-operator exp) '-)))
+(define (minuend sum-exp) (first-term-of-binary sum-exp))
+(define (subtrahend sum-exp) (second-term-of-binary sum-exp))
 
 ;; representing of product
 (define (make-product m1 m2)
@@ -61,44 +91,44 @@
         ((=number? m2 1) m1)
         ((and (number? m1) (number? m2))
          (* m1 m2))
-        (else (list m1 '* m2))))
+        (else (binary-constructor '* m1 m2))))
 (define (product? exp)
   (and (list? exp)
-       (eq? (cadr exp) '*)))
-(define (multiplicand exp) (car exp))
-(define (multiplier exp)(caddr exp))
+       (eq? (binary-operator exp) '*)))
+(define (multiplicand exp) (first-term-of-binary exp))
+(define (multiplier exp)(second-term-of-binary exp))
 
 ; representing of sin
 (define (make-sin exp)
   (if (number? exp)
     (sin exp)
-    (list 'sin exp)))
+    (unary-constructor 'sin exp)))
   
 (define (sin? exp)
   (and (list? exp)
-       (eq? (car exp) 'sin)))
-(define (sin-content exp) (cadr exp))
+       (eq? (unary-operator exp) 'sin)))
+(define (sin-content exp) (content-of-unary exp))
 
 ; representing of cos
 (define (make-cos exp)
   (if (number? exp)
     (cos exp)
-    (list 'cos exp)))
+    (unary-constructor 'cos exp)))
 (define (cos? exp)
   (and (list? exp)
-       (eq? (car exp) 'cos)))
-(define (cos-content exp) (cadr exp))
+       (eq? (unary-operator exp) 'cos)))
+(define (cos-content exp) (content-of-unary exp))
 
 ; representing of exponentiation
 (define (make-exponentiation base exponent)
   (cond ((=number? exponent 0) 1)
         ((=number? exponent 1) base)
         ((number? base) (expt base exponent))
-    (else(list base '** exponent))))
+    (else(binary-constructor '** base exponent))))
 (define (exponentiation? exp)
-  (eq? (cadr exp) '**))
-(define (base exp) (car exp))
-(define (exponent exp) (caddr exp))
+  (eq? (binary-operator exp) '**))
+(define (base exp) (first-term-of-binary exp))
+(define (exponent exp) (second-term-of-binary exp))
 
 ;;;
 ;;; main program
@@ -138,9 +168,6 @@
         (else (error "unknown expression type -- DERIV" exp))))
 
 ;(deriv '(* y (** x 2)) 'x)
-;(deriv '(* x y (+ x 3)) 'x)
-;(deriv '(* x y) 'x)
-;(make-product 'x 'y '(** x 2))
-;(make-sum 'x 'y '(+ x 3))
-;(define (f a . b) (single-operand? b))
-;(f 'x 0)
+;(deriv '(x + (x ** 3)) 'x)
+;(deriv '(x + (x + x)) 'x)
+;(deriv '(x (x 3 **) +) 'x)
