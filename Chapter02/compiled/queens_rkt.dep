@@ -1,1 +1,0 @@
-("7.8" racket ("3cde738337421e58d36536db938f864df9761146" . "9e23d22615fdd225747a9a36c3f661d9d545dea0") (collects #"sicp" #"lang" #"reader.rkt") (collects #"sicp" #"main.rkt"))
