@@ -169,5 +169,6 @@
 
 ;(deriv '(* y (** x 2)) 'x)
 ;(deriv '(x + (x ** 3)) 'x)
+(deriv '(x * (x ** 2)) 'x)
 ;(deriv '(x + (x + x)) 'x)
 ;(deriv '(x (x 3 **) +) 'x)

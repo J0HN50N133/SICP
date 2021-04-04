@@ -6,6 +6,7 @@
          (beside painter
                 (flip-vert painter))))
     (below painter2 painter2)))
+(paint (flipped-pairs e))
 ;(define (right-split painter)
 ;  (let ((right
 ;         (below painter
